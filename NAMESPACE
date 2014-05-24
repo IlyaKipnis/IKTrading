@@ -1,0 +1,7 @@
+useDynLib(IKTrading)
+exportPattern("^[[:alpha:]]+")
+importFrom(Rcpp, evalCpp)
+export(heikinAshi)
+export(hourlyPL)
+export(sigAND)
+export(stratBoxPlots)
