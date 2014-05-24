@@ -1,4 +1,4 @@
 IKTrading
 =========
 
-Ilya's miscellaneous quantstrat extensions, indicators, and order-sizing functions.
+Ilya Kipnis's miscellaneous quantstrat extensions, indicators, and order-sizing functions.
