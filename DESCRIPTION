@@ -28,3 +28,4 @@ Collate:
     'hourlyPL.R'
     'boxPlots.R'
     'sigAND.R'
+    'ichimoku.R'
