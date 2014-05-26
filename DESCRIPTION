@@ -29,3 +29,4 @@ Collate:
     'boxPlots.R'
     'sigAND.R'
     'ichimoku.R'
+    'osMaxDollar.R'
