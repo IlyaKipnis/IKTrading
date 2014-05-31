@@ -35,7 +35,14 @@ osDollarATR <- function(orderside, tradeSize, pctATR, maxPctATR=pctATR, data, ti
   pos <- getPosQty(portfolio, symbol, timestamp)
   atrString <- paste0("atr",atrMod)
   atrCol <- grep(atrString, colnames(mktdata))
+  if(length(atrCol)==0) {
+    stop(paste("Term", atrString, "not found in mktdata column names."))
+  }
   atrTimeStamp <- mktdata[timestamp, atrCol]
+  if(is.na(atrTimeStamp) | atrTimeStamp==0) {
+    stop(paste("ATR corresponding to",atrString,"is invalid at this point in time. 
+               Add a logical operator to account for this."))
+  }
   dollarATR <- pos*atrTimeStamp
   desiredDollarATR <- pctATR*tradeSize
   remainingRiskCapacity <- tradeSize*maxPctATR-dollarATR
