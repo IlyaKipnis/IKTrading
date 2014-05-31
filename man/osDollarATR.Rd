@@ -4,8 +4,8 @@
 \usage{
   osDollarATR(orderside, tradeSize, pctATR,
     maxPctATR = pctATR, data, timestamp, symbol,
-    prefer = "Open", integerQty = TRUE, atrMod = "",
-    rebal = FALSE, ...)
+    prefer = "Open", portfolio, integerQty = TRUE,
+    atrMod = "", rebal = FALSE, ...)
 }
 \arguments{
   \item{orderside}{long or short}
@@ -22,6 +22,11 @@
   held in a position; a risk limit}
 
   \item{integerQty}{an integer quantity of shares}
+
+  \item{atrMod}{a string modifier in case of multiples of
+  this indicator being used. Will append to the term 'atr',
+  that is, atrMod of "X" will search for a term called
+  'atrX' in the column names of the mktdata xts object.}
 
   \item{rebal}{if TRUE, and current position exceeds ATR
   boundaries, will automatically sell}

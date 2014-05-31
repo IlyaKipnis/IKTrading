@@ -23,15 +23,18 @@
 #'If the last observed ATR is 2, then 100 units of the security will be ordered.
 #'@param maxPctATR an upper limit to how many ATRs can be held in a position; a risk limit
 #'@param integerQty an integer quantity of shares
+#'@param atrMod a string modifier in case of multiples of this indicator being used.
+#'Will append to the term 'atr', that is, atrMod of "X" will search for a term called 'atrX'
+#'in the column names of the mktdata xts object.
 #'@param rebal if TRUE, and current position exceeds ATR boundaries, will automatically sell
 osDollarATR <- function(orderside, tradeSize, pctATR, maxPctATR=pctATR, data, timestamp, symbol,
-                        prefer="Open", integerQty=TRUE, atrMod="", rebal=FALSE, ...) {
+                        prefer="Open", portfolio, integerQty=TRUE, atrMod="", rebal=FALSE, ...) {
   if(tradeSize > 0 & orderside == "short"){
     tradeSize <- tradeSize*-1
   }
   pos <- getPosQty(portfolio, symbol, timestamp)
   atrString <- paste0("atr",atrMod)
-  atrCol <- grep(colnames(mktdata), atrString)
+  atrCol <- grep(atrString, colnames(mktdata))
   atrTimeStamp <- mktdata[timestamp, atrCol]
   dollarATR <- pos*atrTimeStamp
   desiredDollarATR <- pctATR*tradeSize
