@@ -27,7 +27,8 @@
 #'Will append to the term 'atr', that is, atrMod of "X" will search for a term called 'atrX'
 #'in the column names of the mktdata xts object.
 #'@param rebal if TRUE, and current position exceeds ATR boundaries, will automatically sell
-osDollarATR <- function(orderside, tradeSize, pctATR, maxPctATR=pctATR, data, timestamp, symbol,
+#'@export
+"osDollarATR" <- function(orderside, tradeSize, pctATR, maxPctATR=pctATR, data, timestamp, symbol,
                         prefer="Open", portfolio, integerQty=TRUE, atrMod="", rebal=FALSE, ...) {
   if(tradeSize > 0 & orderside == "short"){
     tradeSize <- tradeSize*-1
@@ -61,6 +62,11 @@ osDollarATR <- function(orderside, tradeSize, pctATR, maxPctATR=pctATR, data, ti
       qty <- 0
     }
     if(orderside == "short" & qty > 0) {
+      qty <- 0
+    }
+  }
+  if(rebal) {
+    if(pos == 0) {
       qty <- 0
     }
   }
