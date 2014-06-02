@@ -1,0 +1,33 @@
+Package: IKTrading
+Type: Package
+Title: Custom indicators, signals, and rules
+Version: 1.0
+Date: 2014-05-24
+Author: Ilya Kipnis
+Maintainer: Ilya Kipnis <ilya.kipnis@gmail.com>
+Description: Provides a collection of various trading tools.
+License: GPL-2
+Depends:
+    xts (>= 0.9-3),
+    Rcpp,
+    TTR,
+    quantmod,
+    stats,
+    quantstrat
+Imports:
+    Rcpp (>= 0.11.1),
+    xts,
+    TTR,
+    quantmod,
+    stats,
+    quantstrat
+LinkingTo: xts, Rcpp, inline, TTR, quantmod, stats
+Collate:
+    'RcppExports.R'
+    'heikinAshi.R'
+    'hourlyPL.R'
+    'boxPlots.R'
+    'sigAND.R'
+    'ichimoku.R'
+    'osMaxDollar.R'
+    'osDollarATR.R'
