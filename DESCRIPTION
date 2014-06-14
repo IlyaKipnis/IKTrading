@@ -31,3 +31,5 @@ Collate:
     'ichimoku.R'
     'osMaxDollar.R'
     'osDollarATR.R'
+    'quandClean.R'
+    'durationStatistics.R'
