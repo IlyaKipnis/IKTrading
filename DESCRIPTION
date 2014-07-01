@@ -33,3 +33,4 @@ Collate:
     'osDollarATR.R'
     'quandClean.R'
     'durationStatistics.R'
+    'SIROC.R'
