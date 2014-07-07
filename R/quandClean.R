@@ -47,7 +47,7 @@
   
   frontRelevant <- both[both$tracker==1, c(1:6)]
   backRelevant <- both[both$tracker==-1, c(7:12)]
-  colnames(frontRelevant) <- colnames(backRelevant) <- c("Open","High","Low","Close","Volume","OpenInterest")
+  colnames(frontRelevant) <- colnames(backRelevant) <- c("Open","High","Low","Close","Volume","OI")
   relevant <- rbind(frontRelevant, backRelevant)
   relevant[relevant==0] <- NA
   
