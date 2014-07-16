@@ -3,7 +3,7 @@
 \title{Duration Statistics}
 \usage{
   durationStatistics(Portfolio, Symbols,
-    includeOpenTrade = FALSE, ...)
+    includeOpenTrade = FALSE, aggregate = TRUE, ...)
 }
 \arguments{
   \item{Portfolio}{-- the portfolio name}
@@ -14,6 +14,10 @@
   \item{includeOpenTrade}{-- whether to include open trades
   -- defaults to FALSE since if a trade opens on the same
   day as the last day, units will be off}
+
+  \item{aggregate}{-- if TRUE, displays aggregate
+  statistics for all instruments included, otherwise,
+  displays the statistics for each instrument separately}
 }
 \value{
   the min, Q1, median, mean, Q3, and max durations of all

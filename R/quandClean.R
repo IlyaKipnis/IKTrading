@@ -63,14 +63,12 @@
     relevant <- relevant[-NAs,]
   }
   
-  
-  ATR <- ATR(HLC=HLC(relevant))
-  
+  relevant$ATR <- ATR(HLC=HLC(relevant))$atr
   #Technically somewhat cheating, but could be stated in terms of lag 2, 1, and 0.
   #A spike is defined as a data point on Close that's more than 5 ATRs away from both
   #The preceding and following day.
-  spikes <- which(abs((relevant$Close-lag(relevant$Close))/ATR$atr) > 5 
-                  & abs((relevant$Close-lag(relevant$Close, -1))/ATR$atr) > 5)
+  spikes <- which(abs((relevant$Close-lag(relevant$Close))/relevant$ATR) > 5 
+                  & abs((relevant$Close-lag(relevant$Close, -1))/relevant$ATR) > 5)
   if(verbose) {
     message(paste(instrument, "had", length(spikes),"spike days removed from data."))
     print(relevant[spikes,])
@@ -79,6 +77,20 @@
   if(length(spikes) > 0){
     relevant <- relevant[-spikes,]
   }
+  
+  intraDaySpikes <- which((relevant$High-relevant$Low)/relevant$ATR > 10 | 
+                            relevant$Open > relevant$High | relevant$Close > relevant$High |
+                            relevant$Open < relevant$Low | relevant$Close < relevant$Low)
+  if(verbose) {
+    message(paste(instrument, "had", length(intraDaySpikes), "intraday spikes removed from data."))
+    print(relevant[intraDaySpikes,])
+  }
+  
+  if(length(intraDaySpikes) > 0) {
+    relevant <- relevant[-intraDaySpikes,]
+  }
+  relevant$ATR <- NULL
+  
   out <- relevant
   return(out)
 }

@@ -34,3 +34,4 @@ Collate:
     'quandClean.R'
     'durationStatistics.R'
     'SIROC.R'
+    'aggMEcharts.R'
