@@ -22,4 +22,5 @@
   negEMA <- EMA(negDiff, n=nEMA3)
   SIROC <- posEMA/(posEMA+negEMA)
   colnames(SIROC) <- "SIROC"
+  return(SIROC)
 }
