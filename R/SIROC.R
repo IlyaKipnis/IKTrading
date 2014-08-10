@@ -8,7 +8,7 @@
 #'@param maType the moving average type used for the RSI. Defaults to EMA
 #'@return the SIROC indicator, a 1-column oscillator
 #'@export
-"SIROC" <- function(x, n1=30, n2=15, n3=14, maType="EMA", ...) {
+"SIROC" <- function(x, n1=30, n2=15, n3=14, ...) {
   ema1 <- EMA(x, n=n1)
   tmp1 <- (x-ema1)/lag(ema1, k=n1)
   ema2 <- EMA(tmp1, n=n2)

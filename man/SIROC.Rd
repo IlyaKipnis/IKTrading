@@ -2,7 +2,7 @@
 \alias{SIROC}
 \title{SIROC -- Smoothed Indexed Rate Of Change}
 \usage{
-  SIROC(x, n1 = 30, n2 = 15, n3 = 14, maType = "EMA")
+  SIROC(x, n1 = 30, n2 = 15, n3 = 14, ...)
 }
 \arguments{
   \item{n1}{a period upon which to compute an EMA based on

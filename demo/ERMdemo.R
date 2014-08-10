@@ -6,7 +6,7 @@ initDate="1990-01-01"
 from="2003-01-01"
 to=as.character(Sys.Date())
 options(width=70)
-verose=TRUE
+verbose=TRUE
 
 source("demoData.R")
 
@@ -14,7 +14,7 @@ source("demoData.R")
 tradeSize <- 100000
 initEq <- tradeSize*length(symbols)
 
-strategy.st <- portfolio.st <- account.st <- "SIROC_I"
+strategy.st <- portfolio.st <- account.st <- "ERMstrat"
 rm.strat(portfolio.st)
 rm.strat(strategy.st)
 initPortf(portfolio.st, symbols=symbols, initDate=initDate, currency='USD')
@@ -24,58 +24,35 @@ strategy(strategy.st, store=TRUE)
 
 #parameters
 
-n1=10
-n2=5
-n3=4
-entryThresh=30
-exitThresh=70
-
-nSMA1=10
-nSMA2=30
+nFcast=10
+nMAE=10
+nAvg=50
+maType="EMA"
 
 period=10
 pctATR=.02
 
 #indicators
-add.indicator(strategy.st, name="SIROC",
-              arguments=list(x=quote(Cl(mktdata)), n1=n1, 
-                             n2=n2, n3=n3),
-              label="siroc")
-
-add.indicator(strategy.st, name="SMA",
-              arguments=list(x=quote(Cl(mktdata)), n=nSMA1),
-              label="sma1")
-
-add.indicator(strategy.st, name="SMA",
-              arguments=list(x=quote(Cl(mktdata)), n=nSMA2),
-              label="sma2")
-
-
 add.indicator(strategy.st, name="lagATR", 
               arguments=list(HLC=quote(HLC(mktdata)), n=period), 
               label="atrX")
 
-add.signal(strategy.st, name="sigComparison",
-           arguments=list(columns=c("SMA.sma1", "SMA.sma2"), relationship="gt"), 
-           label="upTrend")
+add.indicator(strategy.st, name="ERM",
+              arguments=list(x=quote(Cl(mktdata)), nFcast=nFcast,
+                             nMAE=nMAE, nAvg=nAvg, maType=maType),
+              label="erm")
 
+#signals
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="SIROC.siroc", threshold=entryThresh, 
-                          relationship="lt", cross=FALSE),
-           label="SIROCltThresh")
-
-add.signal(strategy.st, name="sigAND",
-           arguments=list(columns=c("upTrend", "SIROCltThresh"), cross=TRUE),
+           arguments=list(column="ERM.erm", threshold=0, 
+                          relationship="gt", cross=TRUE),
            label="longEntry")
 
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="SIROC.siroc", threshold=exitThresh, 
-                          relationship="gt", cross=TRUE),
+           arguments=list(column="ERM.erm", threshold=0, 
+                          relationship="lt", cross=TRUE),
            label="longExit")
 
-add.signal(strategy.st, name="sigCrossover",
-           arguments=list(columns=c("SMA.sma1", "SMA.sma2"), relationship="lt"),
-           label="SMAexit")
 
 #rules
 add.rule(strategy.st, name="ruleSignal", 
@@ -88,12 +65,6 @@ add.rule(strategy.st, name="ruleSignal",
          arguments=list(sigcol="longExit", sigval=TRUE, orderqty="all", ordertype="market", 
                         orderside="long", replace=FALSE, prefer="Open"), 
          type="exit", path.dep=TRUE)
-
-add.rule(strategy.st, name="ruleSignal", 
-         arguments=list(sigcol="SMAexit", sigval=TRUE, orderqty="all", ordertype="market", 
-                        orderside="long", replace=FALSE, prefer="Open"), 
-         type="exit", path.dep=TRUE)
-
 
 #apply strategy
 t1 <- Sys.time()
@@ -179,9 +150,3 @@ colnames(dailyRetComparison)  <- c("strategy", "SPY")
 round(apply.yearly(dailyRetComparison, Return.cumulative),3)
 round(apply.yearly(dailyRetComparison, SharpeRatio.annualized),3)
 round(apply.yearly(dailyRetComparison, maxDrawdown),3)
-
-chart.Posn(portfolio.st, "XLB")
-add_TA(SIROC(x=Cl(XLB), n1=n1, n2=n2, n3=n3))
-add_TA(SMA(x=Cl(XLB), n=nSMA1), col="blue", on=1, lwd=2)
-add_TA(SMA(x=Cl(XLB), n=nSMA2), col="purple", on=1, lwd=2)
-add_TA(lagATR(HLC=HLC(XLB), n=period), col="purple")

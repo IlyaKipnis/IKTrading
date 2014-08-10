@@ -14,7 +14,7 @@ source("demoData.R")
 tradeSize <- 100000
 initEq <- tradeSize*length(symbols)
 
-strategy.st <- portfolio.st <- account.st <- "SIROC_I"
+strategy.st <- portfolio.st <- account.st <- "DV2_OHV"
 rm.strat(portfolio.st)
 rm.strat(strategy.st)
 initPortf(portfolio.st, symbols=symbols, initDate=initDate, currency='USD')
@@ -23,59 +23,60 @@ initOrders(portfolio.st, initDate=initDate)
 strategy(strategy.st, store=TRUE)
 
 #parameters
+nAvg=2
+pctLookback=126
+maType="SMA"
+deTrend=FALSE
+nDT=126
 
-n1=10
-n2=5
-n3=4
+n1=3
+n2=10
+
 entryThresh=30
 exitThresh=70
-
-nSMA1=10
-nSMA2=30
+volThresh=1
 
 period=10
 pctATR=.02
 
 #indicators
-add.indicator(strategy.st, name="SIROC",
-              arguments=list(x=quote(Cl(mktdata)), n1=n1, 
-                             n2=n2, n3=n3),
-              label="siroc")
-
-add.indicator(strategy.st, name="SMA",
-              arguments=list(x=quote(Cl(mktdata)), n=nSMA1),
-              label="sma1")
-
-add.indicator(strategy.st, name="SMA",
-              arguments=list(x=quote(Cl(mktdata)), n=nSMA2),
-              label="sma2")
-
-
 add.indicator(strategy.st, name="lagATR", 
               arguments=list(HLC=quote(HLC(mktdata)), n=period), 
               label="atrX")
 
-add.signal(strategy.st, name="sigComparison",
-           arguments=list(columns=c("SMA.sma1", "SMA.sma2"), relationship="gt"), 
-           label="upTrend")
+add.indicator(strategy.st, name="DVO",
+              arguments=list(HLC=quote(HLC(mktdata)), nAvg=nAvg, 
+                             pctLookback=pctLookback, maType=maType, 
+                             deTrend=deTrend, nDT=nDT),
+              label="dv2")
+
+add.indicator(strategy.st, name="OHV",
+              arguments=list(x=quote(Cl(mktdata)), n1=n1, n2=n2),
+              label="ohv")
+#signals
+add.signal(strategy.st, name="sigThreshold",
+           arguments=list(column="DVO.dv2", threshold=entryThresh,
+                          relationship="lt", cross=FALSE),
+           label="dv2LtThresh")
 
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="SIROC.siroc", threshold=entryThresh, 
+           arguments=list(column="OHV.ohv", threshold=volThresh,
                           relationship="lt", cross=FALSE),
-           label="SIROCltThresh")
+           label="ohvLtThresh")
 
 add.signal(strategy.st, name="sigAND",
-           arguments=list(columns=c("upTrend", "SIROCltThresh"), cross=TRUE),
+           arguments=list(columns=c("dv2LtThresh", "ohvLtThresh"), cross=TRUE),
            label="longEntry")
 
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="SIROC.siroc", threshold=exitThresh, 
+           arguments=list(column="DVO.dv2", threshold=exitThresh,
                           relationship="gt", cross=TRUE),
            label="longExit")
 
-add.signal(strategy.st, name="sigCrossover",
-           arguments=list(columns=c("SMA.sma1", "SMA.sma2"), relationship="lt"),
-           label="SMAexit")
+add.signal(strategy.st, name="sigThreshold",
+           arguments=list(column="OHV.ohv", threshold=volThresh,
+                          relationship="gt", cross=TRUE),
+           label="volExit")
 
 #rules
 add.rule(strategy.st, name="ruleSignal", 
@@ -90,10 +91,9 @@ add.rule(strategy.st, name="ruleSignal",
          type="exit", path.dep=TRUE)
 
 add.rule(strategy.st, name="ruleSignal", 
-         arguments=list(sigcol="SMAexit", sigval=TRUE, orderqty="all", ordertype="market", 
+         arguments=list(sigcol="volExit", sigval=TRUE, orderqty="all", ordertype="market", 
                         orderside="long", replace=FALSE, prefer="Open"), 
          type="exit", path.dep=TRUE)
-
 
 #apply strategy
 t1 <- Sys.time()
@@ -179,9 +179,3 @@ colnames(dailyRetComparison)  <- c("strategy", "SPY")
 round(apply.yearly(dailyRetComparison, Return.cumulative),3)
 round(apply.yearly(dailyRetComparison, SharpeRatio.annualized),3)
 round(apply.yearly(dailyRetComparison, maxDrawdown),3)
-
-chart.Posn(portfolio.st, "XLB")
-add_TA(SIROC(x=Cl(XLB), n1=n1, n2=n2, n3=n3))
-add_TA(SMA(x=Cl(XLB), n=nSMA1), col="blue", on=1, lwd=2)
-add_TA(SMA(x=Cl(XLB), n=nSMA2), col="purple", on=1, lwd=2)
-add_TA(lagATR(HLC=HLC(XLB), n=period), col="purple")

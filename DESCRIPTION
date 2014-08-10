@@ -35,3 +35,7 @@ Collate:
     'durationStatistics.R'
     'SIROC.R'
     'aggMEcharts.R'
+    'MSR.R'
+    'ERM.R'
+    'DVO.R'
+    'OHV.R'
