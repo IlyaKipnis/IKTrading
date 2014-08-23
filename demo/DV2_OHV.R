@@ -6,7 +6,6 @@ initDate="1990-01-01"
 from="2003-01-01"
 to=as.character(Sys.Date())
 options(width=70)
-verose=TRUE
 
 source("demoData.R")
 
@@ -179,3 +178,15 @@ colnames(dailyRetComparison)  <- c("strategy", "SPY")
 round(apply.yearly(dailyRetComparison, Return.cumulative),3)
 round(apply.yearly(dailyRetComparison, SharpeRatio.annualized),3)
 round(apply.yearly(dailyRetComparison, maxDrawdown),3)
+
+chart.Posn(portfolio.st, "XLB")
+tmp <- DVO(HLC=HLC(XLB), nAvg=nAvg, pctLookback=pctLookback, maType=maType, deTrend=deTrend, nDT=nDT)
+add_TA(tmp, col="purple")
+tmp <- tmp - tmp + entryThresh
+add_TA(tmp, on=5, col="blue", lwd=1.5)
+tmp <- tmp - tmp + exitThresh
+add_TA(tmp, on=5, col="red", lwd=1.5)
+tmp <- OHV(x=Cl(XLB), n1=n1, n2=n2)
+add_TA(tmp, col="purple")
+tmp <- tmp-tmp+volThresh
+add_TA(tmp, on=6, col="blue", lwd=1.5)

@@ -13,7 +13,7 @@ source("demoData.R")
 tradeSize <- 100000
 initEq <- tradeSize*length(symbols)
 
-strategy.st <- portfolio.st <- account.st <- "MSR_I"
+strategy.st <- portfolio.st <- account.st <- "VCI_test"
 rm.strat(portfolio.st)
 rm.strat(strategy.st)
 initPortf(portfolio.st, symbols=symbols, initDate=initDate, currency='USD')
@@ -22,34 +22,54 @@ initOrders(portfolio.st, initDate=initDate)
 strategy(strategy.st, store=TRUE)
 
 #parameters
-
-nMed=50
-nMax=100
-entryThresh <- .5
-exitThresh <- .5
-
-period=10
 pctATR=.02
+period=10
+
+nRange=2
+nLookback=10
+pctRank=FALSE
+
+buyThresh=-2
+sellThresh=2
+
+nSMA=200
 
 #indicators
 add.indicator(strategy.st, name="lagATR", 
               arguments=list(HLC=quote(HLC(mktdata)), n=period), 
               label="atrX")
 
-add.indicator(strategy.st, name="MSR",
-              arguments=list(HLC=quote(HLC(mktdata)), nMed=nMed, nMax=nMax),
-              label="msr")
+add.indicator(strategy.st, name="VCI",
+              arguments=list(OHLC=quote(OHLC(mktdata)), nLookback=nLookback,
+                             nRange=nRange, pctRank=pctRank),
+              label="vci")
+
+add.indicator(strategy.st, name="SMA",
+              arguments=list(x=quote(Cl(mktdata)), n=nSMA),
+              label="sma")
 
 #signals
+add.signal(strategy.st, name="sigComparison",
+           arguments=list(columns=c("Close", "SMA.sma"), relationship="gt"),
+           label="filter")
+
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="MSR.msr", threshold=entryThresh, 
-                          relationship="gt", cross=TRUE),
+           arguments=list(column="VC.vci", threshold=buyThresh, 
+                          relationship="lt", cross=FALSE),
+           label="VCIltThresh")
+
+add.signal(strategy.st, name="sigAND",
+           arguments=list(columns=c("filter", "VCIltThresh"), cross=TRUE),
            label="longEntry")
 
 add.signal(strategy.st, name="sigThreshold",
-           arguments=list(column="MSR.msr", threshold=exitThresh, 
-                          relationship="lt", cross=TRUE),
+           arguments=list(column="VC.vci", threshold=sellThresh,
+                          relationship="gt", cross=TRUE),
            label="longExit")
+
+add.signal(strategy.st, name="sigCrossover",
+           arguments=list(columns=c("Close", "SMA.sma"), relationship="lt"),
+           label="filterExit")
 
 #rules
 add.rule(strategy.st, name="ruleSignal", 
@@ -60,6 +80,11 @@ add.rule(strategy.st, name="ruleSignal",
 
 add.rule(strategy.st, name="ruleSignal", 
          arguments=list(sigcol="longExit", sigval=TRUE, orderqty="all", ordertype="market", 
+                        orderside="long", replace=FALSE, prefer="Open"), 
+         type="exit", path.dep=TRUE)
+
+add.rule(strategy.st, name="ruleSignal", 
+         arguments=list(sigcol="filterExit", sigval=TRUE, orderqty="all", ordertype="market", 
                         orderside="long", replace=FALSE, prefer="Open"), 
          type="exit", path.dep=TRUE)
 
@@ -79,20 +104,20 @@ updateEndEq(account.st)
 #trade statistics
 tStats <- tradeStats(Portfolios = portfolio.st, use="trades", inclZeroDays=FALSE)
 tStats[,4:ncol(tStats)] <- round(tStats[,4:ncol(tStats)], 2)
-#print(data.frame(t(tStats[,-c(1,2)])))
+print(data.frame(t(tStats[,-c(1,2)])))
 (aggPF <- sum(tStats$Gross.Profits)/-sum(tStats$Gross.Losses))
 (aggCorrect <- mean(tStats$Percent.Positive))
 (numTrades <- sum(tStats$Num.Trades))
 (meanAvgWLR <- mean(tStats$Avg.WinLoss.Ratio[tStats$Avg.WinLoss.Ratio < Inf], na.rm=TRUE))
 
 #daily and duration statistics
-#dStats <- dailyStats(Portfolios = portfolio.st, use="Equity")
-#rownames(dStats) <- gsub(".DailyEndEq","", rownames(dStats))
-#print(data.frame(t(dStats)))
+dStats <- dailyStats(Portfolios = portfolio.st, use="Equity")
+rownames(dStats) <- gsub(".DailyEndEq","", rownames(dStats))
+print(data.frame(t(dStats)))
 durStats <- durationStatistics(Portfolio=portfolio.st, Symbols=sort(symbols))
-#indivDurStats <- durationStatistics(Portfolio=portfolio.st, Symbols=sort(symbols), aggregate=FALSE)
+indivDurStats <- durationStatistics(Portfolio=portfolio.st, Symbols=sort(symbols), aggregate=FALSE)
 print(t(durStats))
-#print(t(indivDurStats))
+print(t(indivDurStats))
 
 #market exposure
 tmp <- list()
@@ -104,7 +129,7 @@ for(i in 1:nrow(dStats)) {
 }
 mktExposure <- data.frame(do.call(rbind, tmp))
 colnames(mktExposure) <- c("Symbol","MktExposure")
-#print(mktExposure)
+print(mktExposure)
 print(mean(as.numeric(as.character(mktExposure$MktExposure))))
 
 #portfolio cash PL
@@ -112,7 +137,7 @@ portString <- paste0("portfolio.", portfolio.st)
 portPL <- .blotter[[portString]]$summary$Net.Trading.PL
 
 #Cash Sharpe
-#(SharpeRatio.annualized(portPL, geometric=FALSE))
+(SharpeRatio.annualized(portPL, geometric=FALSE))
 
 #Portfolio comparisons to SPY
 instRets <- PortfReturns(account.st)
@@ -149,6 +174,8 @@ round(apply.yearly(dailyRetComparison, SharpeRatio.annualized),3)
 round(apply.yearly(dailyRetComparison, maxDrawdown),3)
 
 chart.Posn(portfolio.st, "XLB")
-add_TA(MSR(HLC=HLC(XLB), nMed=nMed, nMax=nMax))
-add_TA(xts(rep(.5, nrow(XLB)), order.by=index(XLB)), on=5, col="green")
-add_TA(lagATR(HLC=HLC(XLB), n=period), col="purple")
+add_TA(SMA(Cl(XLB), n=nSMA), on=1, col="blue", lwd=2)
+vci <- VCI(OHLC(XLB), nRange=nRange, nLookback=nLookback, pctRank=pctRank)
+add_TA(vci$VC)
+add_TA(vci$VC - vci$VC + buyThresh, on=5, col="green")
+add_TA(vci$VC - vci$VC + sellThresh, on=5, col="red")

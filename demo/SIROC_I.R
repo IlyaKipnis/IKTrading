@@ -6,7 +6,6 @@ initDate="1990-01-01"
 from="2003-01-01"
 to=as.character(Sys.Date())
 options(width=70)
-verose=TRUE
 
 source("demoData.R")
 
