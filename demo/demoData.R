@@ -1,5 +1,4 @@
 options("getSymbols.warning4.0"=FALSE)
-rm(list=ls(.blotter), envir=.blotter)
 
 currency('USD')
 Sys.setenv(TZ="UTC")

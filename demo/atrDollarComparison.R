@@ -123,7 +123,7 @@ if(atrOrder) {
   print(t2-t1)
 }
 
-if("atrSd" & "dollarSd" %in% ls()){  
+if(("atrSd" %in% ls()) & ("dollarSd" %in% ls())){  
   boxPlotFrame <- cbind(atrSd$pct_contrib_StdDev, 
                         atrES$pct_contrib_MES,
                         dollarSd$pct_contrib_StdDev,
