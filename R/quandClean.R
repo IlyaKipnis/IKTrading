@@ -16,10 +16,19 @@
   backCode <- paste0(stemCode, 2)
   front <- Quandl(frontCode, type="xts", start_date=start_date, end_date=end_date, ...) 
   interestColname <- colnames(front)[grep(pattern="Interest", colnames(front))]
-  front <- front[,c("Open","High","Low","Settle","Volume",interestColname)]
+  volColname <- colnames(front)[grep(pattern="Volume", colnames(front))]
+  if("Close" %in% colnames(front)) {
+    front <- front[,c("Open","High","Low","Close",volColname,interestColname)]
+  } else {
+    front <- front[,c("Open","High","Low","Settle",volColname,interestColname)]
+  }
   colnames(front) <- c("O","H","L","C","V","OI")
   back <- Quandl(backCode, type="xts", start_date=start_date, end_date=end_date, ...)
-  back <- back[,c("Open","High","Low","Settle","Volume",interestColname)]
+  if("Close" %in% colnames(back)) {    
+    back <- back[,c("Open","High","Low","Close",volColname,interestColname)]
+  } else {
+    back <- back[,c("Open","High","Low","Settle",volColname,interestColname)]
+  }
   colnames(back)  <- c("BO","BH","BL","BS","BV","BI") #B for Back
   
   #combine front and back for comparison

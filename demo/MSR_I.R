@@ -4,7 +4,7 @@ require(PerformanceAnalytics)
 
 initDate="1990-01-01"
 from="2003-01-01"
-to=as.character(Sys.Date())
+to="2014-08-31"
 options(width=70)
 
 source("demoData.R")
@@ -81,14 +81,14 @@ tStats <- tradeStats(Portfolios = portfolio.st, use="trades", inclZeroDays=FALSE
 tStats[,4:ncol(tStats)] <- round(tStats[,4:ncol(tStats)], 2)
 #print(data.frame(t(tStats[,-c(1,2)])))
 (aggPF <- sum(tStats$Gross.Profits)/-sum(tStats$Gross.Losses))
-(aggCorrect <- mean(tStats$Percent.Positive))
+(aggCorrect <- sum(tStats$Percent.Positive*tStats$Num.Trades)/sum(tStats$Num.Trades))
 (numTrades <- sum(tStats$Num.Trades))
 (meanAvgWLR <- mean(tStats$Avg.WinLoss.Ratio[tStats$Avg.WinLoss.Ratio < Inf], na.rm=TRUE))
 
 #daily and duration statistics
-#dStats <- dailyStats(Portfolios = portfolio.st, use="Equity")
-#rownames(dStats) <- gsub(".DailyEndEq","", rownames(dStats))
-#print(data.frame(t(dStats)))
+dStats <- dailyStats(Portfolios = portfolio.st, use="Equity")
+rownames(dStats) <- gsub(".DailyEndEq","", rownames(dStats))
+print(data.frame(t(dStats)))
 durStats <- durationStatistics(Portfolio=portfolio.st, Symbols=sort(symbols))
 #indivDurStats <- durationStatistics(Portfolio=portfolio.st, Symbols=sort(symbols), aggregate=FALSE)
 print(t(durStats))
@@ -144,7 +144,7 @@ maxDrawdown(portfRets)
 
 dailyRetComparison <- cbind(portfRets, SPYrets)
 colnames(dailyRetComparison)  <- c("strategy", "SPY")
-round(apply.yearly(dailyRetComparison, Return.cumulative),3)
+aRets <- round(apply.yearly(dailyRetComparison, Return.cumulative),3)
 round(apply.yearly(dailyRetComparison, SharpeRatio.annualized),3)
 round(apply.yearly(dailyRetComparison, maxDrawdown),3)
 

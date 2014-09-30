@@ -22,8 +22,8 @@ initOrders(portfolio.st, initDate=initDate)
 strategy(strategy.st, store=TRUE)
 
 #parameters
-pctATR=.02
-period=10
+pctATR <- .02
+period <- 10
 atrOrder <- TRUE
 
 nRSI <- 2
@@ -31,6 +31,7 @@ buyThresh <- 20
 sellThresh <- 80
 nSMA <- 200
 
+#indicators
 add.indicator(strategy.st, name="lagATR", 
               arguments=list(HLC=quote(HLC(mktdata)), n=period), 
               label="atrX")
