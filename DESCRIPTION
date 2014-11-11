@@ -13,15 +13,19 @@ Depends:
     TTR,
     quantmod,
     stats,
-    quantstrat
+    quantstrat,
+    digest,
+    roxygen2
 Imports:
     Rcpp (>= 0.11.1),
     xts,
     TTR,
     quantmod,
     stats,
-    quantstrat
-LinkingTo: xts, Rcpp, inline, TTR, quantmod, stats
+    quantstrat,
+    digest,
+    roxygen2
+LinkingTo: xts, Rcpp, inline, TTR, quantmod, stats, digest, roxygen2
 Collate:
     'RcppExports.R'
     'heikinAshi.R'
@@ -40,3 +44,5 @@ Collate:
     'DVO.R'
     'OHV.R'
     'VCI.R'
+    'stepwiseCorRank.R'
+    'FAA.R'

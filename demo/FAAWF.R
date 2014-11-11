@@ -1,4 +1,5 @@
 require(PerformanceAnalytics)
+require(quantmod)
 
 mutualFunds <- c("VTSMX", #Vanguard Total Stock Market Index
                  "FDIVX", #Fidelity Diversified International Fund
@@ -8,7 +9,7 @@ mutualFunds <- c("VTSMX", #Vanguard Total Stock Market Index
                  "QRAAX", #Oppenheimer Commodity Strategy Total Return 
                  "VGSIX" #Vanguard REIT Index Fund
 )
-                 
+
 #mid 1997 to end of 2012
 getSymbols(mutualFunds, from="1997-06-30", to="2012-12-31")
 tmp <- list()
@@ -21,8 +22,8 @@ adPrices <- do.call(cbind, args = tmp)
 colnames(adPrices) <- gsub(".Adjusted", "", colnames(adPrices))
 
 FAAreturns <- function(prices, monthLookback = 4,
-                                 weightMom=1, weightVol=.5, weightCor=.5, 
-                                 riskFreeName="VFISX", bestN=3) {
+                       weightMom=1, weightVol=.5, weightCor=.5, 
+                       riskFreeName="VFISX", bestN=3) {
   
   returns <- Return.calculate(prices)
   monthlyEps <- endpoints(prices, on = "months")
@@ -98,19 +99,57 @@ FAAreturns <- function(prices, monthLookback = 4,
   return(strategyReturns)
 }
 
-replicaAttempt <- FAAreturns(adPrices)
-bestN4 <- FAAreturns(adPrices, bestN=4)
-N3vol1cor1 <- FAAreturns(adPrices, weightVol = 1, weightCor = 1)
-minRisk <- FAAreturns(adPrices, weightMom = 0, weightVol=1, weightCor=1)
-pureMomentum <- FAAreturns(adPrices, weightMom=1, weightVol=0, weightCor=0)
-maxDecor <- FAAreturns(adPrices, weightMom=0, weightVol=0, weightCor=1)
-momDecor <- FAAreturns(adPrices, weightMom=1, weightVol=0, weightCor=1)
+weightMom <- seq(0, 1, by=.5)
+weightVol <- c(0, .5, 1)
+weightCor <- c(0, .5, 1)
+monthLookback=c(3, 4, 6, 10)
+permutations <- expand.grid(weightMom, weightVol, weightCor, monthLookback)
+colnames(permutations) <- c("wMom", "wVol", "wCor", "monthLookback")
 
-all <- cbind(replicaAttempt, bestN4, N3vol1cor1, minRisk, pureMomentum, maxDecor, momDecor)
-colnames(all) <- c("Replica Attempt", "N4", "vol_1_cor_1", "minRisk", "pureMomentum", "maxDecor", "momDecor")
-charts.PerformanceSummary(all, colorset=c("black", "red", "blue", "green", "darkgrey", "purple", "orange"))
+require(doMC)
+registerDoMC(detectCores())
+t1 <- Sys.time()
+out <- foreach(i = 1:nrow(permutations), .combine = cbind) %dopar% {
+  FAAreturns(prices=adPrices, 
+             monthLookback = permutations$monthLookback[i], 
+             weightMom = permutations$wMom[i], 
+             weightCor = permutations$wCor[i], 
+             weightVol=permutations$wVol[i])
+}
+t2 <- Sys.time()
+print(t2-t1)
 
-stats <- data.frame(t(rbind(Return.annualized(all)*100,
-      maxDrawdown(all)*100,
-      SharpeRatio.annualized(all))))
-stats$Return_To_Drawdown <- stats[,1]/stats[,2]
+out <- out["1998-10::"] #start at 1999 due to NAs with
+
+FAAwalkForward <- function(portfolios, applySubset = apply.quarterly, applyFUN = Return.cumulative) {
+  metrics <- applySubset(portfolios, applyFUN)
+  weights <- list()
+  for(i in 1:nrow(metrics)) {
+    row <- metrics[i,]
+    winners <- row==max(row)
+    weight <- winners/rowSums(winners) #equal weight all top performers
+    weights[[i]] <- weight
+  }
+  weights <- do.call(rbind, weights)
+  returns <- Return.rebalancing(portfolios, weights)
+  return(returns)
+}
+
+WFQtrRets <- FAAwalkForward(portfolios = out, applySubset = apply.quarterly, applyFUN = Return.cumulative)
+WFYrRets <- FAAwalkForward(portfolios = out, applySubset = apply.yearly, applyFUN = Return.cumulative)
+WFMoRets <- FAAwalkForward(portfolios = out, applySubset = apply.monthly, applyFUN = Return.cumulative)
+
+WF <- cbind(WFQtrRets, WFYrRets, WFMoRets)
+colnames(WF) <- c("quarterly", "annually", "monthly")
+WF <- WF["1999::"]
+
+original <- FAAreturns(adPrices)
+original <- original["1999::"]
+WF <- cbind(WF, original)
+colnames(WF)[4] <- "original"
+charts.PerformanceSummary(WF)
+
+Return.annualized(WF)
+maxDrawdown(WF)
+SharpeRatio.annualized(WF)
+
