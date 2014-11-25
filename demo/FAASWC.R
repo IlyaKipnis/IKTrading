@@ -59,7 +59,7 @@ stepwiseCorRank <- function(corMatrix, startNames=NULL, stepSize=1, bestHighestR
 
 FAAreturns <- function(prices, monthLookback = 4,
                        weightMom = 1, weightVol = .5, weightCor = .5, 
-                       riskFreeName = NULL, bestN = 3,
+                       riskFreeName = "VFISX", bestN = 3,
                        stepCorRank = FALSE, stepStartMethod = c("best", "default"),
                        geometric = TRUE) {
   stepStartMethod <- stepStartMethod[1]
@@ -165,8 +165,7 @@ mutualFunds <- c("VTSMX", #Vanguard Total Stock Market Index
                  "VFISX", #Vanguard Short-Term Treasury Fund
                  "VBMFX", #Vanguard Total Bond Market Index Fund
                  "QRAAX", #Oppenheimer Commodity Strategy Total Return 
-                 "VGSIX", #Vanguard REIT Index Fund
-                 "TSLA" #Tesla, to test Gerald Morrison's issue
+                 "VGSIX" #Vanguard REIT Index Fund
 )
 
 #mid 1997 to end of 2012
@@ -180,7 +179,7 @@ for(fund in mutualFunds) {
 adPrices <- do.call(cbind, args = tmp)
 colnames(adPrices) <- gsub(".Adjusted", "", colnames(adPrices))
 
-original <- FAAreturns(adPrices, stepCorRank=FALSE, riskFreeName = NULL)
+original <- FAAreturns(adPrices, stepCorRank=FALSE)
 origGeomFalse <- FAAreturns(adPrices, stepCorRank=FALSE, geometric=FALSE)
 originalSWCbest <- FAAreturns(adPrices, stepCorRank=TRUE)
 originalSWCdefault <- FAAreturns(adPrices, stepCorRank=TRUE, stepStartMethod="default")

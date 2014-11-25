@@ -1,12 +1,12 @@
-\name{FAAreturns}
-\alias{FAAreturns}
+\name{FAA}
+\alias{FAA}
 \title{Flexible Asset Allocation returns algorithm}
 \usage{
-  FAAreturns(prices, monthLookback = 4, weightMom = 1,
+  FAA(prices, monthLookback = 4, weightMom = 1,
     weightVol = 0.5, weightCor = 0.5, riskFreeName = NULL,
     bestN = 3, stepCorRank = FALSE,
     stepStartMethod = c("best", "default"),
-    geometric = TRUE)
+    geometric = TRUE, ...)
 }
 \arguments{
   \item{prices}{a price history for assets intended to be
@@ -55,12 +55,12 @@
   a single xts of strategy returns
 }
 \description{
-  implements a modification of the Flexible Asset
-  Allocation algorithm, by Keller and Van Putten (2012).
-  FAA takes the best assets as ranked by a weighted
-  rank-sum of momentum, volatility, and correlation. This
-  implementation first filters on momentum above zero
-  before proceeding with ranking.
+  implements the Flexible Asset Allocation algorithm, by
+  Keller and Van Putten (2012). FAA takes the best assets
+  as ranked by a weighted rank-sum of momentum, volatility,
+  and correlation. This implementation first filters on
+  momentum above zero after performing all ranking and
+  weight allocations.
 }
 \references{
   \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}

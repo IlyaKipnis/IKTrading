@@ -1,7 +1,7 @@
 #'Flexible Asset Allocation returns algorithm
-#'@description implements the Flexible Asset Allocation algorithm, by Keller and Van Putten (2012).
+#'@description implements a modification of the Flexible Asset Allocation algorithm, by Keller and Van Putten (2012).
 #'FAA takes the best assets as ranked by a weighted rank-sum of momentum, volatility, and correlation.
-#'This implementation first filters on momentum above zero after performing all ranking and weight allocations.
+#'This implementation first filters on momentum above zero before proceeding with ranking.
 #'@param prices a price history for assets intended to be traded over the course of the simulation. Need not be contemporaneous.
 #'@param monthLookback a monthly lookback period over which to compute momentum, volatility, and correlations. (Default 4)
 #'@param weightMom the weight to put on the momentum rank in the calculation 
@@ -21,11 +21,11 @@
 #'@references \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}
 #'\cr \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2193735}
 #'@export
-"FAA" <- function(prices, monthLookback = 4,
-                weightMom = 1, weightVol = .5, weightCor = .5, 
-                riskFreeName = NULL, bestN = 3,
-                stepCorRank = FALSE, stepStartMethod = c("best", "default"),
-                geometric = TRUE, ...) {
+"FAAreturns" <- function(prices, monthLookback = 4,
+                       weightMom = 1, weightVol = .5, weightCor = .5, 
+                       riskFreeName = NULL, bestN = 3,
+                       stepCorRank = FALSE, stepStartMethod = c("best", "default"),
+                       geometric = TRUE) {
   stepStartMethod <- stepStartMethod[1]
   if(is.null(riskFreeName)) {
     prices$zeroes <- 0
@@ -40,48 +40,65 @@
   dates <- list()
   
   for(i in 2:(length(monthlyEps) - monthLookback)) {
+    
     #subset data
     priceData <- prices[monthlyEps[i]:monthlyEps[i+monthLookback],]
     returnsData <- returns[monthlyEps[i]:monthlyEps[i+monthLookback],]
     
     #perform computations
     momentum <- data.frame(t(t(priceData[nrow(priceData),])/t(priceData[1,]) - 1))
-    momentum <- momentum[,!is.na(momentum)]
-    #momentum[is.na(momentum)] <- -1 #set any NA momentum to negative 1 to keep R from crashing
-    priceData <- priceData[,names(momentum)]
-    returnsData <- returnsData[,names(momentum)]
+    momentum[is.na(momentum)] <- -1 #set any NA momentum to negative 1 to keep R from crashing
+    priceData <- priceData[, momentum > 0] #remove securities with momentum < 0
+    returnsData <- returnsData[, momentum > 0]
+    momentum <- momentum[momentum > 0]
+    names(momentum) <- colnames(returnsData)
     
-    momRank <- rank(momentum)
-    vols <- data.frame(StdDev(returnsData))
-    volRank <- rank(-vols)
-    cors <- cor(returnsData, use = "complete.obs")
-    if (stepCorRank) {
-      if(stepStartMethod=="best") {
+    if(length(momentum) > 1) {
+      vol <- as.numeric(-sd.annualized(returnsData)) #only need to compute volatility if there's more than 1 security
+      #perform ranking
+      if(!stepCorRank) {
+        sumCors <- -colSums(cor(returnsData, use="complete.obs"))
+        stats <- data.frame(cbind(momentum, vol, sumCors))
+        ranks <- data.frame(apply(stats, 2, rank))
+        weightRankSum <- weightMom*ranks$momentum + weightVol*ranks$vol + weightCor*ranks$sumCors
+        names(weightRankSum) <- rownames(ranks)
+      } else {
+        corMatrix <- cor(returnsData, use="complete.obs")
+        momRank <- rank(momentum)
+        volRank <- rank(vol)
         compositeMomVolRanks <- weightMom*momRank + weightVol*volRank
         maxRank <- compositeMomVolRanks[compositeMomVolRanks==max(compositeMomVolRanks)]
-        corRank <- stepwiseCorRank(corMatrix=cors, startNames = names(maxRank), 
-                                        bestHighestRank = TRUE, ...)
-        
-      } else {
-        corRank <- stepwiseCorRank(corMatrix=cors, bestHighestRank=TRUE, ...)
+        if(stepStartMethod=="default") {
+          stepCorRanks <- stepwiseCorRank(corMatrix=corMatrix, startNames = NULL, 
+                                          stepSize = 1, bestHighestRank = TRUE)
+        } else {
+          stepCorRanks <- stepwiseCorRank(corMatrix=corMatrix, startNames = names(maxRank), 
+                                          stepSize = 1, bestHighestRank = TRUE)
+        }
+        weightRankSum <- weightMom*momRank + weightVol*volRank + weightCor*stepCorRanks
       }
-    } else {
-      corRank <- rank(-rowSums(cors))
+      
+      totalRank <- rank(weightRankSum)
+      
+      #find top N values, from http://stackoverflow.com/questions/2453326/fastest-way-to-find-second-third-highest-lowest-value-in-vector-or-column
+      #thanks to Dr. Rob J. Hyndman
+      upper <- length(names(returnsData))
+      lower <- max(upper-bestN+1, 1)
+      topNvals <- sort(totalRank, partial=seq(from=upper, to=lower))[c(upper:lower)]
+      
+      #compute weights
+      longs <- totalRank %in% topNvals #invest in ranks length - bestN or higher (in R, rank 1 is lowest)
+      longs <- longs/sum(longs) #equal weight all candidates
+      longs[longs > 1/bestN] <- 1/bestN #in the event that we have fewer than top N invested into, lower weights to 1/top N
+      names(longs) <- names(totalRank)
+      
+    } else if(length(momentum) == 1) { #only one security had positive momentum 
+      longs <- 1/bestN
+      names(longs) <- names(momentum)
+    } else { #no securities had positive momentum 
+      longs <- 1
+      names(longs) <- riskFreeName
     }
-    
-    totalRank <- rank(weightMom*momRank + weightVol*volRank + weightCor*corRank)
-    
-    upper <- length(names(returnsData))
-    lower <- max(upper-bestN+1, 1)
-    topNvals <- sort(totalRank, partial=seq(from=upper, to=lower))[c(upper:lower)]
-    
-    #compute weights
-    longs <- totalRank %in% topNvals #invest in ranks length - bestN or higher (in R, rank 1 is lowest)
-    longs[momentum < 0] <- 0 #in previous algorithm, removed momentums < 0, this time, we zero them out at the end.
-    longs <- longs/sum(longs) #equal weight all candidates
-    longs[longs > 1/bestN] <- 1/bestN #in the event that we have fewer than top N invested into, lower weights to 1/top N
-    names(longs) <- names(totalRank)
-    
     
     #append removed names (those with momentum < 0)
     removedZeroes <- rep(0, ncol(returns)-length(longs))

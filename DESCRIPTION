@@ -46,3 +46,4 @@ Collate:
     'VCI.R'
     'stepwiseCorRank.R'
     'FAA.R'
+    'FAAreturns.R'
