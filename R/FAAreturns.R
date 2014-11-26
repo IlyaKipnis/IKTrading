@@ -111,7 +111,7 @@
     
     #append lists
     tmp[[i]] <- longs
-    dates[[i]] <- index(returnsData)[nrow(returnsData)]
+    dates[[i]] <- as.character(index(returnsData)[nrow(returnsData)])
   }
   
   weights <- do.call(rbind, tmp)

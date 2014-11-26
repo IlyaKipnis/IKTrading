@@ -1,7 +1,7 @@
 #'Flexible Asset Allocation returns algorithm
 #'@description implements the Flexible Asset Allocation algorithm, by Keller and Van Putten (2012).
 #'FAA takes the best assets as ranked by a weighted rank-sum of momentum, volatility, and correlation.
-#'This implementation first filters on momentum above zero after performing all ranking and weight allocations.
+#'This implementation first filters on momentum above zero after performing all ranking and weight allocaations.
 #'@param prices a price history for assets intended to be traded over the course of the simulation. Need not be contemporaneous.
 #'@param monthLookback a monthly lookback period over which to compute momentum, volatility, and correlations. (Default 4)
 #'@param weightMom the weight to put on the momentum rank in the calculation 
@@ -21,7 +21,8 @@
 #'@references \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}
 #'\cr \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2193735}
 #'@export
-"FAA" <- function(prices, monthLookback = 4,
+
+FAA <- function(prices, monthLookback = 4,
                 weightMom = 1, weightVol = .5, weightCor = .5, 
                 riskFreeName = NULL, bestN = 3,
                 stepCorRank = FALSE, stepStartMethod = c("best", "default"),
@@ -94,7 +95,7 @@
     
     #append lists
     tmp[[i]] <- longs
-    dates[[i]] <- index(returnsData)[nrow(returnsData)]
+    dates[[i]] <- as.character(index(returnsData)[nrow(returnsData)])
   }
   
   weights <- do.call(rbind, tmp)

@@ -60,7 +60,7 @@
   as ranked by a weighted rank-sum of momentum, volatility,
   and correlation. This implementation first filters on
   momentum above zero after performing all ranking and
-  weight allocations.
+  weight allocaations.
 }
 \references{
   \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}
