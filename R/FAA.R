@@ -17,6 +17,8 @@
 #'The 'best' argument chooses the best ranked asset by the momentum and volatility weights, while the 'default' method starts with
 #'the initial lowest-correlated asset. (Default 'best')
 #'@param geometric whether or not to use geometric compounding for returns (default TRUE)
+#'@param riskFreeInTie whether to allocate to the risk-free asset in the event of a tie (default TRUE)
+#'@param returnWeights if TRUE, returns a length-two list of weights and returns (default FALSE)
 #'@return a single xts of strategy returns
 #'@references \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}
 #'\cr \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2193735}
@@ -26,7 +28,8 @@ FAA <- function(prices, monthLookback = 4,
                 weightMom = 1, weightVol = .5, weightCor = .5, 
                 riskFreeName = NULL, bestN = 3,
                 stepCorRank = FALSE, stepStartMethod = c("best", "default"),
-                geometric = TRUE, ...) {
+                geometric = TRUE, riskFreeInTie=TRUE, 
+                returnWeights=FALSE, ...) {
   stepStartMethod <- stepStartMethod[1]
   if(is.null(riskFreeName)) {
     prices$zeroes <- 0
@@ -78,10 +81,16 @@ FAA <- function(prices, monthLookback = 4,
     
     #compute weights
     longs <- totalRank %in% topNvals #invest in ranks length - bestN or higher (in R, rank 1 is lowest)
+    names(longs) <- names(totalRank)
     longs[momentum < 0] <- 0 #in previous algorithm, removed momentums < 0, this time, we zero them out at the end.
+    if(!riskFreeInTie) { #remove cash from ties if specified
+      if(riskFreeName %in% names(longs) & sum(longs) > bestN) {
+        longs[riskFreeName] <- 0
+      }
+    }
     longs <- longs/sum(longs) #equal weight all candidates
     longs[longs > 1/bestN] <- 1/bestN #in the event that we have fewer than top N invested into, lower weights to 1/top N
-    names(longs) <- names(totalRank)
+    
     
     
     #append removed names (those with momentum < 0)
@@ -104,5 +113,8 @@ FAA <- function(prices, monthLookback = 4,
   weights[, riskFreeCol] <- weights[, riskFreeCol] + 1-rowSums(weights)
   strategyReturns <- Return.rebalancing(R = returns, weights = weights, geometric = geometric)
   colnames(strategyReturns) <- paste(monthLookback, weightMom, weightVol, weightCor, sep="_")
+  if(returnWeights) {
+    return(list(weights, strategyReturns))
+  }
   return(strategyReturns)
 }

@@ -6,7 +6,8 @@
     weightVol = 0.5, weightCor = 0.5, riskFreeName = NULL,
     bestN = 3, stepCorRank = FALSE,
     stepStartMethod = c("best", "default"),
-    geometric = TRUE, ...)
+    geometric = TRUE, riskFreeInTie = TRUE,
+    returnWeights = FALSE, ...)
 }
 \arguments{
   \item{prices}{a price history for assets intended to be
@@ -50,6 +51,12 @@
 
   \item{geometric}{whether or not to use geometric
   compounding for returns (default TRUE)}
+
+  \item{riskFreeInTie}{whether to allocate to the risk-free
+  asset in the event of a tie (default TRUE)}
+
+  \item{returnWeights}{if TRUE, returns a length-two list
+  of weights and returns (default FALSE)}
 }
 \value{
   a single xts of strategy returns
