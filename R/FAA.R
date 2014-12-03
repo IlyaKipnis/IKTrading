@@ -88,7 +88,11 @@ FAA <- function(prices, monthLookback = 4,
         longs[riskFreeName] <- 0
       }
     }
-    longs <- longs/sum(longs) #equal weight all candidates
+    if(sum(longs)==0) {
+      longs <- longs #if no assets selected, just keep as is--a bunch of zeroes
+    } else {     
+      longs <- longs/sum(longs) #equal weight all candidates
+    }
     longs[longs > 1/bestN] <- 1/bestN #in the event that we have fewer than top N invested into, lower weights to 1/top N
     
     
