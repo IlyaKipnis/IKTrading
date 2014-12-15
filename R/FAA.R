@@ -37,9 +37,12 @@ FAA <- function(prices, monthLookback = 4,
     warning("No risk-free security specified. Recommended to use one of: quandClean('CHRIS/CME_US'), SHY, or VFISX. 
             Using vector of zeroes instead.")
   }
+  
+  prices <- na.locf(prices)
+  riskFreeCol <- grep(riskFreeName, colnames(prices))
+  if(is.na(prices[1,riskFreeCol])) {stop("Risk-free asset contains leading NAs. Please correct this.")}
   returns <- Return.calculate(prices)
   monthlyEps <- endpoints(prices, on = "months")
-  riskFreeCol <- grep(riskFreeName, colnames(prices))
   tmp <- list()
   dates <- list()
   
@@ -50,6 +53,7 @@ FAA <- function(prices, monthLookback = 4,
     
     #perform computations
     momentum <- data.frame(t(t(priceData[nrow(priceData),])/t(priceData[1,]) - 1))
+    momentum[is.na(momentum)] <- -1
     momentum <- momentum[,!is.na(momentum)]
     #momentum[is.na(momentum)] <- -1 #set any NA momentum to negative 1 to keep R from crashing
     priceData <- priceData[,names(momentum)]
