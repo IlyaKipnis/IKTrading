@@ -99,9 +99,7 @@ FAA <- function(prices, monthLookback = 4,
     }
     longs[longs > 1/bestN] <- 1/bestN #in the event that we have fewer than top N invested into, lower weights to 1/top N
     
-    
-    
-    #append removed names (those with momentum < 0)
+    #append removed names (those with momentum NA)
     removedZeroes <- rep(0, ncol(returns)-length(longs))
     names(removedZeroes) <- names(returns)[!names(returns) %in% names(longs)]
     longs <- c(longs, removedZeroes)
