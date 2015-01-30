@@ -62,7 +62,7 @@ FAA <- function(prices, monthLookback = 4,
     momRank <- rank(momentum)
     vols <- data.frame(StdDev(returnsData))
     volRank <- rank(-vols)
-    cors <- cor(returnsData, use = "complete.obs")
+    cors <- cor(returnsData, use = "pairwise.complete")
     if (stepCorRank) {
       if(stepStartMethod=="best") {
         compositeMomVolRanks <- weightMom*momRank + weightVol*volRank
