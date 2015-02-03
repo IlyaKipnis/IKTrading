@@ -5,16 +5,16 @@
 
 using namespace Rcpp;
 
-// computeHaClose
-NumericVector computeHaClose(NumericVector haOpen, NumericVector haClose);
-RcppExport SEXP IKTrading_computeHaClose(SEXP haOpenSEXP, SEXP haCloseSEXP) {
+// computeHaOpen
+NumericVector computeHaOpen(NumericVector haOpen, NumericVector haClose);
+RcppExport SEXP IKTrading_computeHaOpen(SEXP haOpenSEXP, SEXP haCloseSEXP) {
 BEGIN_RCPP
     SEXP __sexp_result;
     {
         Rcpp::RNGScope __rngScope;
         Rcpp::traits::input_parameter< NumericVector >::type haOpen(haOpenSEXP );
         Rcpp::traits::input_parameter< NumericVector >::type haClose(haCloseSEXP );
-        NumericVector __result = computeHaClose(haOpen, haClose);
+        NumericVector __result = computeHaOpen(haOpen, haClose);
         PROTECT(__sexp_result = Rcpp::wrap(__result));
     }
     UNPROTECT(1);
