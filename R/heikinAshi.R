@@ -13,7 +13,7 @@
   heikinAshi$xH <- apply(tmp,1,max)
   heikinAshi$xL <- apply(tmp,1,min)
   heikinAshi$posNeg <- 1
-  heikinAshi$posNeg[heikinAshi$C < heikinAshi$O] <- -1
+  heikinAshi$posNeg[heikinAshi$xC < heikinAshi$xO] <- -1
   return(heikinAshi)
 }
 
