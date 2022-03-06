@@ -17,6 +17,7 @@
 #'The 'best' argument chooses the best ranked asset by the momentum and volatility weights, while the 'default' method starts with
 #'the initial lowest-correlated asset. (Default 'best')
 #'@param geometric whether or not to use geometric compounding for returns (default TRUE)
+#'@param returnWeights if TRUE, returns a length-two list of weights and returns (default FALSE)
 #'@return a single xts of strategy returns
 #'@references \url{http://quantstrattrader.wordpress.com/2014/10/31/combining-faa-and-stepwise-correlation/}
 #'\cr \url{http://papers.ssrn.com/sol3/papers.cfm?abstract_id=2193735}
@@ -25,7 +26,7 @@
                        weightMom = 1, weightVol = .5, weightCor = .5, 
                        riskFreeName = NULL, bestN = 3,
                        stepCorRank = FALSE, stepStartMethod = c("best", "default"),
-                       geometric = TRUE) {
+                       geometric = TRUE, returnWeights=FALSE) {
   stepStartMethod <- stepStartMethod[1]
   if(is.null(riskFreeName)) {
     prices$zeroes <- 0
@@ -120,5 +121,8 @@
   weights[, riskFreeCol] <- weights[, riskFreeCol] + 1-rowSums(weights)
   strategyReturns <- Return.rebalancing(R = returns, weights = weights, geometric = geometric)
   colnames(strategyReturns) <- paste(monthLookback, weightMom, weightVol, weightCor, sep="_")
+  if(returnWeights) {
+    return(list(weights, strategyReturns))
+  }
   return(strategyReturns)
 }
